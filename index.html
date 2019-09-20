@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--
+
+    * Get mobile clicks into sequencer.
+    * Twitch colors for buttons.
+    * Keyboard cheat sheet.
+
+    * Get good synths.
+    * Build a percussive mode.
+
+    * Set dimensions for mobile grid? Config service?
+
+    * Start/ Stop voting
+    * Set probability.
+    * Set loops per vote tally.
+    * Click track?
+
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sequence</title>
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body.demo {
+            background: #00ff00;
+        }
+
+        #config {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 256px;
+            height: 256px;
+            color: white;
+            background: red;
+            z-index: 1000;
+            display: none;
+        }
+
+        #container {
+            position: fixed;
+            top: 25%;
+            left: 0;
+            bottom: 25%;
+            right: 0;
+            display: flex;
+        }
+
+        .column {
+            display: flex;
+            flex-grow: 1;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .columnActive .row {
+            background: #FBB040;
+        }
+
+        .row {
+            display: flex;
+
+            flex-grow: 1;
+            flex-direction: row;
+            justify-content: center;
+            margin: 2px;
+            position: relative;
+            border: 4px solid #999999;
+        }
+
+        .rowInactive {
+
+            background: #333333;
+        }
+
+        .rowActive {
+            background: #29b8e5;
+        }
+
+        .meter {
+            background: rgba(255, 255, 255, .25);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 0%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="config">
+        <label>Synth</label>
+        <div>
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+        </div>
+        <label>Key</label>
+        <div>
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+        </div>
+        <label>BPM</label>
+        <div>
+            <button>30</button>
+            <button>60</button>
+            <button>90</button>
+            <button>120</button>
+        </div>
+        <label>Grid</label>
+        <div>
+            <button>8</button>
+            <button>16</button>
+            <button>32</button>
+        </div>
+    </div>
+    <div id="container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.8.25/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+
+    <script src="/js/heat.js"></script>
+    <script src="/js/sequence.js"></script>
+
+</body>
+
+</html>
