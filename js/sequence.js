@@ -61,6 +61,9 @@ let synthDatas = [
     }
 ];
 
+let columns;
+let rows;
+
 (function () {
 
     // Parameters
@@ -71,13 +74,9 @@ let synthDatas = [
     let paddingBottom = params.get("paddingBottom") || 10;
 
     let bpm = params.get("bpm") || 128;
-    let columns = params.get("columns") || 8;
-    let rows = 7;
 
-
-    let clickTally = 0;
-    let clickTallyContainer = document.getElementById('clickTally');
-
+    columns = params.get("columns") || 8;
+    rows = 7;
 
     // Container Setup.
 
@@ -88,7 +87,15 @@ let synthDatas = [
     // Event listeners.
 
     heat.addEventListener('grid', (e) => {
-        console.log(e.detail);
+        let gridX = ((parseInt(e.detail.x) + currentColumnIndex + 1) % columns);
+        let gridY = parseInt(e.detail.y);
+
+        let column = container.childNodes[gridX];
+        let row = column.childNodes[gridY];
+
+        if (row != null) {
+            row.click();
+        }
     });
 
     heat.addEventListener('click', (e) => {
@@ -98,8 +105,6 @@ let synthDatas = [
         var element = document.elementFromPoint(x, y);
         if (element != null) {
             element.click();
-            clickTally++;
-            clickTallyContainer.innerHTML = clickTally;
         }
     });
 
@@ -110,9 +115,11 @@ let synthDatas = [
 
     // Sequence setup.
 
+    let currentColumnIndex;
     let currentColumn;
     let sequence = new Tone.Sequence(function (time, columnIndex) {
         currentColumn = container.childNodes[columnIndex];
+        currentColumnIndex = columnIndex;
 
         let rowWinnerIndex = null;
         let rowWinner = null;
@@ -314,92 +321,112 @@ let synthDatas = [
         DrawGrid(rows, columns);
     }
 
-    function DrawGrid(rowCount, columnCount) {
 
-        //  Grid setup.
-        container.innerHTML = '';
 
-        for (let x = 0; x < columnCount; x++) {
+    // Main animation loop.
 
-            let column = document.createElement('div');
-            column.classList.add('column');
-            container.appendChild(column);
-
-            for (let y = 0; y < rowCount; y++) {
-
-                let cell = document.createElement('div');
-                cell.classList.add('row');
-                cell.classList.add('rowInactive');
-                column.appendChild(cell);
-
-                cell.dataset.clickCount = 0;
-                cell.dataset.clickTime = 0;
-
-                let meter = document.createElement('div');
-                meter.classList.add('meter');
-                cell.appendChild(meter);
-
-                cell.addEventListener('click', function () {
-                    if (Tone.context.state !== 'running') {
-                        Tone.context.resume();
-                    }
-
-                    cell.dataset.clickCount++;
-                    cell.dataset.clickTime = Date.now();
-                });
-            }
-        }
-    }
-
-    // Meter refresh loop.
-
-    function update(timestamp) {
-
-        // Simulate clicks.
-
-        if (simulateClicks) {
-            const x = parseInt(Math.random() * window.innerWidth);
-            const y = parseInt(Math.random() * window.innerHeight);
-
-            var element = document.elementFromPoint(x, y);
-
-            element.click();
-        }
-
-        // Update meters;
-
-        for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
-            let column = container.childNodes[columnIndex]
-            let totalClicks = 0;
-
-            // Total tally.
-            for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
-                let row = column.childNodes[rowIndex];
-                totalClicks = totalClicks + parseInt(row.dataset.clickCount);
-            }
-
-            // Set percentages.
-            for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
-
-                let row = column.childNodes[rowIndex];
-                let percentage = row.dataset.clickCount / totalClicks;
-                let meter = row.childNodes[0];
-                meter.style.height = (percentage * 100) + "%";
-
-                //
-
-                let clickAge = Date.now() - row.dataset.clickTime;
-                if (clickAge < 250) {
-                    let decay = 1 - (clickAge / 250);
-                    row.style.borderColor = "rgba(255,255,255," + decay + ")";
-                } else {
-                    row.style.borderColor = "#666666";
-                }
-            }
-        }
-
-        window.requestAnimationFrame(update);
-    }
-    window.requestAnimationFrame(update);
+    window.requestAnimationFrame(Update);
 
 })();
+
+
+
+//
+// Grid generation.
+//
+
+function DrawGrid(rowCount, columnCount) {
+
+    //  Grid setup.
+    container.innerHTML = '';
+
+    for (let x = 0; x < columnCount; x++) {
+
+        let column = document.createElement('div');
+        column.classList.add('column');
+        container.appendChild(column);
+
+        for (let y = 0; y < rowCount; y++) {
+
+            let cell = document.createElement('div');
+            cell.classList.add('row');
+            cell.classList.add('rowInactive');
+            column.appendChild(cell);
+
+            cell.dataset.clickCount = 0;
+            cell.dataset.clickTime = 0;
+
+            let meter = document.createElement('div');
+            meter.classList.add('meter');
+            cell.appendChild(meter);
+
+            let border = document.createElement('div');
+            border.classList.add('border');
+            cell.appendChild(border);
+
+            cell.addEventListener('click', function () {
+                if (Tone.context.state !== 'running') {
+                    Tone.context.resume();
+                }
+
+                cell.dataset.clickCount++;
+                cell.dataset.clickTime = Date.now();
+            });
+        }
+    }
+}
+
+//
+// Main loop.
+//
+
+function Update(timestamp) {
+
+    // Simulate clicks.
+
+    if (simulateClicks) {
+        const x = parseInt(Math.random() * window.innerWidth);
+        const y = parseInt(Math.random() * window.innerHeight);
+
+        var element = document.elementFromPoint(x, y);
+
+        element.click();
+    }
+
+    // Update meters;
+
+    for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
+        let column = container.childNodes[columnIndex]
+        let totalClicks = 0;
+
+        // Total tally.
+        for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
+            let row = column.childNodes[rowIndex];
+            totalClicks = totalClicks + parseInt(row.dataset.clickCount);
+        }
+
+        // Set percentages.
+        for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
+
+            let row = column.childNodes[rowIndex];
+            let percentage = row.dataset.clickCount / totalClicks;
+
+            let meter = row.childNodes[0];
+            meter.style.height = (percentage * 100) + "%";
+
+
+            //
+
+            let border = row.childNodes[1];
+            let clickAge = Date.now() - row.dataset.clickTime;
+            if (clickAge < 250) {
+                let decay = 1 - (clickAge / 250);
+                border.style.opacity = 1;
+            } else {
+                border.style.opacity = null;
+            }
+        }
+    }
+
+    window.requestAnimationFrame(Update);
+}
