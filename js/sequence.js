@@ -3,71 +3,28 @@
 let simulateClicks = false;
 
 let notesDatas = [
-
     ["C3", "E3", "G3", "C4", "E4", "G4"],
     ["C3", "D#3", "G3", "C4", "D#4", "G4"],
     ["C3", "D#3", "F#3", "C4", "D#4", "F#4"],
     ["C3", "E3", "G#3", "C4", "E4", "G#4"],
 ]
 
-let synthDatas = [
-    {
-        oscillator: {
-            type: "sine"
-        },
-        envelope: {
-            attack: 0.005,
-            decay: 0.1,
-            sustain: 0.3,
-            release: 1
-        },
-        volume: -12
-    },
-    {
-        oscillator: {
-            type: "square"
-        },
-        envelope: {
-            attack: 0.005,
-            decay: 0.1,
-            sustain: 0.3,
-            release: 1
-        },
-        volume: -12
-    },
-    {
-        oscillator: {
-            type: "triangle"
-        },
-        envelope: {
-            attack: 0.005,
-            decay: 0.1,
-            sustain: 0.3,
-            release: 1
-        },
-        volume: -12
-    },
-    {
-        oscillator: {
-            type: "sawtooth"
-        },
-        envelope: {
-            attack: 0.005,
-            decay: 0.1,
-            sustain: 0.3,
-            release: 1
-        },
-        volume: -12
-    }
-];
+let synths = [];
 
-let columns;
-let rows;
+let container;
+let columns, rows;
+
+let sequence;
+let synth, notes;
+
+let currentColumnIndex = 0;
+
+let info;
+let clickCount = 0;
 
 (function () {
 
     // Parameters
-
     const params = (new URL(document.location)).searchParams;
 
     let paddingTop = params.get("paddingTop") || 10;
@@ -75,12 +32,20 @@ let rows;
 
     let bpm = params.get("bpm") || 128;
 
-    columns = params.get("columns") || 8;
+    columns = params.get("columns") || 16;
     rows = 7;
+
+    // Click counter.
+
+    info = document.getElementById('info');
+    setInterval(() => {
+        info.innerHTML = clickCount;
+        clickCount = 0;
+    }, 1000);
 
     // Container Setup.
 
-    const container = document.getElementById('container');
+    container = document.getElementById('main');
     container.style.top = paddingTop + "%";
     container.style.bottom = paddingBottom + "%";
 
@@ -95,6 +60,7 @@ let rows;
 
         if (row != null) {
             row.click();
+            clickCount++;
         }
     });
 
@@ -103,76 +69,23 @@ let rows;
         const y = parseInt(e.detail.y * window.innerHeight);
 
         var element = document.elementFromPoint(x, y);
-        if (element != null) {
+        if (element != null && container.contains(element)) {
             element.click();
+            clickCount++;
         }
     });
 
     // Synth setup.
+    createSynths()
 
-    let notes = SetNotes(0);
-    let synth = SetSynth(0);
+    setNotes(0);
+    setSynth(0);
 
     // Sequence setup.
-
-    let currentColumnIndex;
-    let currentColumn;
-    let sequence = new Tone.Sequence(function (time, columnIndex) {
-        currentColumn = container.childNodes[columnIndex];
-        currentColumnIndex = columnIndex;
-
-        let rowWinnerIndex = null;
-        let rowWinner = null;
-        let rowVotes = 0;
-
-        for (let rowIndex = 0; rowIndex < currentColumn.childNodes.length; rowIndex++) {
-            let currentRow = currentColumn.childNodes[rowIndex];
-
-            if (currentRow.dataset.clickCount > rowVotes) {
-                rowVotes = currentRow.dataset.clickCount;
-                rowWinnerIndex = rowIndex;
-                rowWinner = currentRow;
-            }
-
-            currentRow.dataset.clickCount = 0;
-        }
-
-        if (rowWinnerIndex != null) {
-            if (rowWinnerIndex < currentColumn.childNodes.length - 1) {
-                synth.triggerAttackRelease(notes[rowWinnerIndex], "4n");
-            }
-            rowWinner.dataset.clickCount = 1;
-        }
-
-        Tone.Draw.schedule(function () {
-            for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
-                let column = container.childNodes[columnIndex]
-
-                if (column == currentColumn) {
-                    column.classList.add('columnActive');
-                } else {
-                    column.classList.remove('columnActive');
-                }
-
-                //
-
-                for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
-                    let row = column.childNodes[rowIndex];
-
-                    if (row.dataset.clickCount > 0) {
-                        //row.classList.add('rowActive');
-                    } else {
-                        row.classList.remove('rowActive');
-                    }
-                }
-            }
-        }, time);
-
-    }, [], "8n");
+    sequence = new Tone.Sequence(triggerColumn, [], "8n");
 
     // Grid setup.
-
-    SetSteps(columns);
+    setSteps(columns);
 
     // Start sequence.
 
@@ -181,161 +94,185 @@ let rows;
 
     // Tone setup.
 
-    SetBPM(bpm);
+    setBPM(bpm);
     Tone.Transport.start();
 
     // Commands
+    configureShortcuts();
 
-    document.addEventListener('keydown', (event) => {
-        const keyName = event.key;
-
-        if (event.key === '1') {
-            if (synth != null) synth.dispose();
-            synth = SetSynth(0);
-        }
-        if (event.key === '2') {
-            if (synth != null) synth.dispose();
-            synth = SetSynth(1);
-        }
-        if (event.key === '3') {
-            if (synth != null) synth.dispose();
-            synth = SetSynth(2);
-        }
-        if (event.key === '4') {
-            if (synth != null) synth.dispose();
-            synth = SetSynth(4);
-        }
-
-        if (event.key === 'q') {
-            notes = SetNotes(0);
-        }
-        if (event.key === 'w') {
-            notes = SetNotes(1);
-        }
-        if (event.key === 'e') {
-            notes = SetNotes(2);
-        }
-        if (event.key === 'r') {
-            notes = SetNotes(3);
-        }
-
-        if (event.key === 'a') {
-            SetBPM(30);
-        }
-        if (event.key === 's') {
-            SetBPM(60);
-        }
-        if (event.key === 'd') {
-            SetBPM(90);
-        }
-        if (event.key === 'f') {
-            SetBPM(120);
-        }
-
-        if (event.key === 'j') {
-            SetSteps(8);
-        }
-        if (event.key === 'k') {
-            SetSteps(16);
-        }
-        if (event.key === 'l') {
-            SetSteps(32);
-        }
-
-        if (event.key == 'g') {
-            simulateClicks = !simulateClicks;
-        }
-
-        if (event.key === 'p') {
-            console.log("Play/Pause");
-
-            if (Tone.Transport.state == 'paused') {
-                Tone.Transport.start();
-            } else {
-                Tone.Transport.pause();
-            }
-        }
-
-        if (event.key === 'c') {
-
-            for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
-                let column = container.childNodes[columnIndex];
-                column.classList.remove('columnActive');
-
-                //
-
-                for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
-                    let row = column.childNodes[rowIndex];
-                    row.dataset.clickCount = 0;
-                    row.classList.remove('rowActive');
-                }
-            }
-
-        }
-
-        if (event.key === 'x') {
-            for (let i = 0; i < 3000; i++) {
-
-
-                const x = parseInt(Math.random() * window.innerWidth);
-                const y = parseInt(Math.random() * window.innerHeight);
-
-                var element = document.elementFromPoint(x, y);
-
-                element.click();
-
-            }
-        }
-
-    }, false);
-
-    function SetSynth(synthIndex) {
-        console.log("Setting synth " + synthIndex);
-        let synthData = synthDatas[synthIndex];
-        //return new Tone.MembraneSynth().toMaster();
-        return new Tone.MonoSynth(synthData).toMaster();
-    }
-
-    function SetNotes(notesIndex) {
-        return notesDatas[notesIndex];
-    }
-
-    function SetBPM(bpm) {
-        Tone.Transport.bpm.value = bpm;
-    }
-
-    function SetSteps(newColumnCount) {
-        columns = newColumnCount;
-
-        //
-
-        sequence.removeAll();
-        for (let i = 0; i < columns; i++) {
-            sequence.add(i, i);
-        }
-
-        sequence.loopEnd = sequence.subdivision * columns;
-
-        //
-
-        DrawGrid(rows, columns);
-    }
-
-
+    // Draw config.
+    drawConfig();
 
     // Main animation loop.
-
-    window.requestAnimationFrame(Update);
-
+    window.requestAnimationFrame(update);
 })();
 
 
+//
+// Trigger sequencer column.
+//
+
+function triggerColumn(time, columnIndex) {
+    let currentColumn = container.childNodes[columnIndex];
+    currentColumnIndex = columnIndex;
+
+    // Vote for new active column.
+
+    let rowWinnerIndex = null;
+    let rowVotes = 0;
+
+    for (let rowIndex = 0; rowIndex < currentColumn.childNodes.length; rowIndex++) {
+        let currentRow = currentColumn.childNodes[rowIndex];
+
+        if (currentRow.dataset.clickCount > rowVotes) {
+            rowVotes = currentRow.dataset.clickCount;
+            rowWinnerIndex = rowIndex;
+        }
+
+        currentRow.dataset.clickCount = 0;
+    }
+
+    // Update active row based on vote.
+
+    if (rowWinnerIndex != null) {
+        for (let rowIndex = 0; rowIndex < currentColumn.childNodes.length; rowIndex++) {
+            let currentRow = currentColumn.childNodes[rowIndex];
+            if (rowIndex == rowWinnerIndex) {
+                currentRow.dataset.active = 1;
+            } else {
+                currentRow.dataset.active = 0;
+            }
+        }
+    }
+
+    // Trigger active row.
+
+    for (let rowIndex = 0; rowIndex < currentColumn.childNodes.length; rowIndex++) {
+        let currentRow = currentColumn.childNodes[rowIndex];
+        if (parseInt(currentRow.dataset.active) == 1) {
+            let note = notes[rowIndex];
+            if (note) synth.triggerAttackRelease(note, "4n");
+            break;
+        }
+    }
+
+    //
+
+    Tone.Draw.schedule(function () {
+        for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
+            let column = container.childNodes[columnIndex]
+
+            if (column == currentColumn) {
+                column.classList.add('columnActive');
+            } else {
+                column.classList.remove('columnActive');
+            }
+
+            for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
+                let row = column.childNodes[rowIndex];
+                if (parseInt(row.dataset.active) == 1) {
+                    row.classList.add('cellActive');
+                } else {
+                    row.classList.remove('cellActive');
+                }
+            }
+        }
+    }, time);
+
+}
+
+//
+// Config drawing and methods.
+//
+
+function drawConfig() {
+
+    const buttons = document.getElementsByTagName("button");
+    Array.from(buttons).forEach(function (button) {
+        button.addEventListener('click', function () {
+            const dataType = button.dataset.type;
+            const dataValue = parseInt(button.dataset.value);
+
+            switch (dataType) {
+                case 'setSynth':
+                    setSynth(dataValue);
+                    break;
+                case 'setNotes':
+                    setNotes(dataValue);
+                    break;
+                case 'setBPM':
+                    setBPM(dataValue);
+                    break;
+                case 'setSteps':
+                    setSteps(dataValue);
+                    break;
+                case 'togglePlay':
+                    togglePlay();
+                    break;
+                case 'clearGrid':
+                    clearGrid();
+                    break;
+            }
+        });
+    });
+}
+
+function togglePlay() {
+    console.log("Play/Pause");
+
+    if (Tone.Transport.state == 'paused') {
+        Tone.Transport.start();
+    } else {
+        Tone.Transport.pause();
+    }
+}
+
+function clearGrid() {
+    for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
+        let column = container.childNodes[columnIndex];
+        for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
+            let row = column.childNodes[rowIndex];
+            row.dataset.clickCount = 0;
+            row.dataset.active = 0;
+        }
+    }
+}
+
+function setSynth(synthIndex) {
+    console.log("Setting synth: " + synthIndex);
+    synth = synths[synthIndex];
+}
+
+function setNotes(notesIndex) {
+    notes = notesDatas[notesIndex];
+}
+
+function setBPM(bpm) {
+    Tone.Transport.bpm.value = bpm;
+}
+
+function setSteps(newColumnCount) {
+    columns = newColumnCount;
+
+    //
+
+    sequence.removeAll();
+    for (let i = 0; i < columns; i++) {
+        sequence.add(i, i);
+    }
+
+    sequence.loopEnd = sequence.subdivision * columns;
+
+    //
+
+    drawGrid(rows, columns);
+}
 
 //
 // Grid generation.
 //
 
-function DrawGrid(rowCount, columnCount) {
+function drawGrid(rowCount, columnCount) {
 
     //  Grid setup.
     container.innerHTML = '';
@@ -349,19 +286,20 @@ function DrawGrid(rowCount, columnCount) {
         for (let y = 0; y < rowCount; y++) {
 
             let cell = document.createElement('div');
-            cell.classList.add('row');
-            cell.classList.add('rowInactive');
+            cell.classList.add('cell');
+            cell.classList.add('cellInactive');
             column.appendChild(cell);
 
             cell.dataset.clickCount = 0;
             cell.dataset.clickTime = 0;
+            cell.dataset.active = 0;
 
             let meter = document.createElement('div');
             meter.classList.add('meter');
             cell.appendChild(meter);
 
             let border = document.createElement('div');
-            border.classList.add('border');
+            border.classList.add('cellBorder');
             cell.appendChild(border);
 
             cell.addEventListener('click', function () {
@@ -380,7 +318,7 @@ function DrawGrid(rowCount, columnCount) {
 // Main loop.
 //
 
-function Update(timestamp) {
+function update(timestamp) {
 
     // Simulate clicks.
 
@@ -390,10 +328,12 @@ function Update(timestamp) {
 
         var element = document.elementFromPoint(x, y);
 
-        element.click();
+        if (element != null && container.contains(element)) {
+            element.click();
+        }
     }
 
-    // Update meters;
+    // update meters;
 
     for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
         let column = container.childNodes[columnIndex]
@@ -409,7 +349,14 @@ function Update(timestamp) {
         for (let rowIndex = 0; rowIndex < column.childNodes.length; rowIndex++) {
 
             let row = column.childNodes[rowIndex];
-            let percentage = row.dataset.clickCount / totalClicks;
+            let percentage;
+
+            if (totalClicks > 0) {
+                percentage = row.dataset.clickCount / totalClicks;
+            }
+            else {
+                percentage = 0;
+            }
 
             let meter = row.childNodes[0];
             meter.style.height = (percentage * 100) + "%";
@@ -428,5 +375,206 @@ function Update(timestamp) {
         }
     }
 
-    window.requestAnimationFrame(Update);
+    window.requestAnimationFrame(update);
+}
+
+
+//
+// Create synths.
+//
+
+function createSynths() {
+
+    synths = [];
+
+    synths[0] = new Tone.MonoSynth({
+        "volume": -1,
+        "portamento": 0,
+        "oscillator": {
+            "type": "sawtooth"
+        },
+        "filter": {
+            "Q": 2,
+            "type": "bandpass",
+            "rolloff": -24
+        },
+        "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.2,
+            "release": 0.6
+        },
+        "filterEnvelope": {
+            "attack": 0.02,
+            "decay": 0.4,
+            "sustain": 1,
+            "release": 0.7,
+            "releaseCurve": "linear",
+            "baseFrequency": 20,
+            "octaves": 5
+        }
+    }).toMaster();
+
+    synths[1] = new Tone.MonoSynth({
+        "volume": -12,
+        "portamento": 0,
+        "oscillator": {
+            "type": "fmsquare5",
+            "modulationType": "triangle",
+            "modulationIndex": 2,
+            "harmonicity": 0.501
+        },
+        "filter": {
+            "Q": 1,
+            "type": "lowpass",
+            "rolloff": -24
+        },
+        "envelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.4,
+            "release": 2
+        },
+        "filterEnvelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.8,
+            "release": 1.5,
+            "baseFrequency": 50,
+            "octaves": 4.4
+        }
+    }).toMaster();
+
+    synths[2] = new Tone.MonoSynth({
+        "volume": -12,
+        "portamento": 0,
+        "oscillator": {
+            "type": "custom",
+            "partials": [
+                2,
+                1,
+                3,
+                2,
+                0.4
+            ]
+        },
+        "filter": {
+            "Q": 4,
+            "type": "lowpass",
+            "rolloff": -48
+        },
+        "envelope": {
+            "attack": 0.04,
+            "decay": 0.06,
+            "sustain": 0.4,
+            "release": 1
+        },
+        "filterEnvelope": {
+            "attack": 0.01,
+            "decay": 0.1,
+            "sustain": 0.6,
+            "release": 1.5,
+            "baseFrequency": 50,
+            "octaves": 3.4
+        }
+    }).toMaster();
+
+    synths[3] = new Tone.MembraneSynth({
+        "volume": -12,
+        "envelope": {
+            "sustain": 0.1,
+            "attack": 0.005,
+            "decay": 0.8
+        },
+        "octaves": 5,
+        oscillator: {
+            "detune": -1200
+        }
+    }).toMaster();
+
+}
+
+//
+// Keyboard shorcuts.
+//
+
+function configureShortcuts() {
+    document.addEventListener('keydown', (event) => {
+        const keyName = event.key;
+
+        if (event.key === '1') {
+            setSynth(0);
+        }
+        if (event.key === '2') {
+            setSynth(1);
+        }
+        if (event.key === '3') {
+            setSynth(2);
+        }
+        if (event.key === '4') {
+            setSynth(3);
+        }
+
+        if (event.key === 'q') {
+            setNotes(0);
+        }
+        if (event.key === 'w') {
+            setNotes(1);
+        }
+        if (event.key === 'e') {
+            setNotes(2);
+        }
+        if (event.key === 'r') {
+            setNotes(3);
+        }
+
+        if (event.key === 'a') {
+            setBPM(30);
+        }
+        if (event.key === 's') {
+            setBPM(60);
+        }
+        if (event.key === 'd') {
+            setBPM(90);
+        }
+        if (event.key === 'f') {
+            setBPM(120);
+        }
+
+        if (event.key === 'j') {
+            setSteps(8);
+        }
+        if (event.key === 'k') {
+            setSteps(16);
+        }
+        if (event.key === 'l') {
+            setSteps(32);
+        }
+
+        if (event.key == 'g') {
+            simulateClicks = !simulateClicks;
+        }
+
+        if (event.key === 'p') {
+            togglePlay();
+        }
+
+        if (event.key === 'c') {
+            clearGrid();
+        }
+
+        if (event.key === 'x') {
+            for (let i = 0; i < 3000; i++) {
+
+                const x = parseInt(Math.random() * window.innerWidth);
+                const y = parseInt(Math.random() * window.innerHeight);
+
+                var element = document.elementFromPoint(x, y);
+                if (element != null && container.contains(element)) {
+                    element.click();
+                }
+            }
+        }
+
+    }, false);
 }
