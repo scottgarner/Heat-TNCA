@@ -60,7 +60,7 @@ class Sequence {
         // Event listeners.
 
         heat.addEventListener('grid', (e) => {
-            let gridX = ((parseInt(e.detail.x) + currentColumnIndex + 1) % config.steps);
+            let gridX = ((parseInt(e.detail.x) + this.currentColumnIndex + 1) % config.steps);
             let gridY = parseInt(e.detail.y);
 
             let column = this.container.childNodes[gridX];
