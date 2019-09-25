@@ -87,6 +87,7 @@
             height: 32;
             background: red;
             color: white;
+            display: none;
         }
 
         .column {
@@ -97,7 +98,7 @@
         }
 
         .columnActive .cell {
-            background: #000000 !important;
+            background: #F0F0FF !important;
         }
 
 
@@ -120,7 +121,7 @@
         }
 
         .cell:last-child {
-            background: #999999;
+            background: #2e2e2e;
             background-image: url("images/rest.svg");
             background-repeat: no-repeat;
             background-position: center center;
@@ -129,15 +130,15 @@
 
         .cellInactive {
 
-            background: #f0f0ff;
+            background: #000000;
         }
 
         .cellActive {
-            background: #91f6ff;
+            background: #9048ff;
         }
 
         .meter {
-            background: #000;
+            background: #fff;
             position: absolute;
             bottom: 0;
             width: 100%;
@@ -152,7 +153,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            border: 2px solid purple;
+            border: 2px solid white;
             opacity: 0;
             z-index: 100;
             border-radius: 4px;
@@ -169,35 +170,60 @@
                 <div class="col-sm">
                     <label>Synth</label>
                     <div class="btn-group" role="group">
-                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="0">0</button>
-                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="1">1</button>
-                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="2">2</button>
-                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="3">3</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="0"
+                            data-shortcut="1">0</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="1"
+                            data-shortcut="2">1</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="2"
+                            data-shortcut="3">2</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSynth" data-value="3"
+                            data-shortcut="4">3</button>
                     </div>
 
                     <label>Notes</label>
                     <div class="btn-group" role="group">
-                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="0">0</button>
-                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="1">1</button>
-                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="2">2</button>
-                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="3">3</button>
+                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="0"
+                            data-shortcut="q">0</button>
+                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="1"
+                            data-shortcut="w">1</button>
+                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="2"
+                            data-shortcut="e">2</button>
+                        <button class="btn btn-primary btn-sm" data-type="setNotes" data-value="3"
+                            data-shortcut="r">3</button>
                     </div>
 
                     <label>BPM</label>
                     <div class="btn-group" role="group">
-                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="30">30</button>
-                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="60">60</button>
-                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="90">90</button>
-                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="120">120</button>
+                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="30"
+                            data-shortcut="a">30</button>
+                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="60"
+                            data-shortcut="s">60</button>
+                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="90"
+                            data-shortcut="d">90</button>
+                        <button class="btn btn-primary btn-sm" data-type="setBPM" data-value="120"
+                            data-shortcut="f">120</button>
                     </div>
+
                     <label>Grid</label>
                     <div class="btn-group" role="group">
-                        <button class="btn btn-primary btn-sm" data-type="setSteps" data-value="8">8</button>
-                        <button class="btn btn-primary btn-sm" data-type="setSteps" data-value="16">16</button>
-                        <button class="btn btn-primary btn-sm" data-type="setSteps" data-value="32">32</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSteps" data-value="8"
+                            data-shortcut="j">8</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSteps" data-value="16"
+                            data-shortcut="k">16</button>
+                        <button class="btn btn-primary btn-sm" data-type="setSteps" data-value="32"
+                            data-shortcut="l">32</button>
                     </div>
-                    <button class="btn btn-primary btn-sm" data-type="togglePlay" data-value="8">Play/Pause</button>
-                    <button class="btn btn-primary btn-sm" data-type="clearGrid" data-value="8">Clear Grid</button>
+
+                    <button class="btn btn-primary btn-sm" data-type="togglePlay" data-value="8"
+                        data-shortcut="p">Play/Pause</button>
+                    <button class="btn btn-primary btn-sm" data-type="toggleAutoTally" data-value="8"
+                        data-shortcut="y">AutoTally</button>
+
+                    <button class="btn btn-primary btn-sm" data-type="clearGrid" data-value="8" data-shortcut="c">Clear
+                        Grid</button>
+                    <button class="btn btn-primary btn-sm" data-type="tallyNow" data-value="8" data-shortcut="t">Tally
+                        Now</button>
+
                 </div>
             </div>
         </div>
@@ -213,6 +239,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 
     <script src="js/heat.js"></script>
+    <script src="js/interface.js"></script>
     <script src="js/sequence.js"></script>
 
 </body>

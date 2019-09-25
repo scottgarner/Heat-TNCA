@@ -5,6 +5,6 @@
 <style type="text/css">
 	.st0{fill:#808080;}
 </style>
-<rect x="56" y="16" transform="matrix(0.7071 0.7071 -0.7071 0.7071 64 -26.5097)" class="st0" width="16" height="96"/>
-<rect x="56" y="16" transform="matrix(-0.7071 0.7071 -0.7071 -0.7071 154.5097 64)" class="st0" width="16" height="96"/>
+<rect x="-8.7" y="51.9" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -26.5089 63.9995)" class="st0" width="145.5" height="24.2"/>
+<rect x="51.9" y="-8.7" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -26.5095 64.0009)" class="st0" width="24.2" height="145.5"/>
 </svg>
