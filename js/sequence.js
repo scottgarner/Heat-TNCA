@@ -19,10 +19,10 @@ class Sequence {
 
         this.synths = [];
         this.scales = [
-            ["F3", "G3", "A3", "C4", "E4", "F4"],
-            ["D3", "E3", "F3", "A3", "C4", "D4"],
-            ["A3", "B3", "C4", "E4", "G4", "A4"],
-            ["G3", "A3", "B3", "D4", "F#4", "G4"],
+            ["C3", "E3", "G3", "C4", "E4", "G4"],
+            ["C3", "D#3", "G3", "C4", "D#4", "G4"],
+            ["C3", "D#3", "F#3", "C4", "D#4", "F#4"],
+            ["C3", "E3", "G#3", "C4", "E4", "G#4"],
         ]
 
         this.synth;
@@ -164,7 +164,7 @@ class Sequence {
         for (let rowIndex = 0; rowIndex < currentColumn.childNodes.length; rowIndex++) {
             let currentRow = currentColumn.childNodes[rowIndex];
             if (parseInt(currentRow.dataset.active) == 1) {
-                let note = this.notes[this.notes.length - 1 - rowIndex];
+                let note = this.notes[rowIndex];
                 if (note) this.synth.triggerAttackRelease(note, "4n");
                 break;
             }
